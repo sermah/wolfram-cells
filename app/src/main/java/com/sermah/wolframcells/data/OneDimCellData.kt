@@ -42,4 +42,34 @@ data class OneDimCellData (
             for (x in 0 until width)
                 append(if (this@OneDimCellData[x, y] == 0.toByte()) "." else "#")
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as OneDimCellData
+
+        if (width != other.width) return false
+        if (height != other.height) return false
+        if (statesCount != other.statesCount) return false
+        if (wrapSides != other.wrapSides) return false
+        if (noWrapWallState != other.noWrapWallState) return false
+        if (evolveRule != other.evolveRule) return false
+        if (!data.contentDeepEquals(other.data)) return false
+        if (lastGen != other.lastGen) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = width
+        result = 31 * result + height
+        result = 31 * result + statesCount
+        result = 31 * result + wrapSides.hashCode()
+        result = 31 * result + noWrapWallState
+        result = 31 * result + evolveRule.hashCode()
+        result = 31 * result + data.contentDeepHashCode()
+        result = 31 * result + lastGen
+        return result
+    }
 }
