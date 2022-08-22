@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
                             evolveRule = WfRule(currentRule)::execute
                         ).also {
                             val offsetCoerced = startPatternOffset.coerceIn(0 until gridWidth - startPattern.size)
-                            for (i in 0 until startPattern.size)
+                            for (i in 0 until startPattern.size.coerceAtMost(gridWidth - startPattern.size))
                                 it[offsetCoerced + i, 0] = startPattern[i]
                             it.completeSimulation()
                         }

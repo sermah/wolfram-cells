@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -148,6 +149,19 @@ fun SettingsDialog(
                     )
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "Size = ${startPatternEditor.size}",
+                            style = MaterialTheme.typography.caption,
+                            modifier = Modifier
+                                .padding(top = 4.dp, bottom = 4.dp, end = 8.dp),
+                            textAlign = TextAlign.Start
+                        )
+                        Divider(Modifier.weight(1f),
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f),
+                            thickness = 1.dp,
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         PatternEditor(
                             startPattern = startPatternEditor,
                             stateCount = 2,
@@ -158,11 +172,14 @@ fun SettingsDialog(
                             val i = idx.coerceIn(0 until startPatternEditor.size)
                             startPatternEditor[i] = ((startPatternEditor[i] + 1) % 2).toByte()
                         }
-                        IconButton(onClick = { startPatternEditor.add(0.toByte()) }) {
-                            Icon(Icons.Sharp.Add, "", Modifier.size(32.dp))
+                        IconButton(onClick = { startPatternEditor.add(0.toByte()) }, Modifier.size(40.dp)) {
+                            Icon(Icons.Sharp.Add, "", Modifier.size(24.dp))
                         }
-                        IconButton(onClick = { startPatternEditor.removeLast() }) {
-                            Icon(Icons.Sharp.Delete, "", Modifier.size(32.dp))
+                        IconButton(
+                            enabled = startPatternEditor.size > 1,
+                            onClick = { if (startPatternEditor.size > 1) startPatternEditor.removeLast() },
+                            modifier = Modifier.size(40.dp)) {
+                            Icon(Icons.Sharp.Delete, "", Modifier.size(24.dp))
                         }
                     }
 
