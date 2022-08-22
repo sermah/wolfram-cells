@@ -1,16 +1,35 @@
 package com.sermah.wolframcells.components
 
+import android.graphics.Bitmap
+import android.graphics.Color
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.sharp.Add
+import androidx.compose.material.icons.sharp.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.core.graphics.set
 import com.sermah.wolframcells.ui.theme.Typography
+import kotlin.math.floor
 
 @Composable
 fun SettingsDialog(
@@ -30,19 +49,20 @@ fun SettingsDialog(
     ) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    Dialog(onDismissRequest = onDismissRequest) {
-        var ruleField by remember { mutableStateOf(rule.toString()) }
-        var gridWidthField by remember { mutableStateOf(gridWidth.toString()) }
-        var gridHeightField by remember { mutableStateOf(gridHeight.toString()) }
-        var wrapAroundCheckBox by remember { mutableStateOf(wrapAround) }
-        // var startPatternField by remember { mutableStateOf(startPattern) }
-        var startPatternOffsetField by remember { mutableStateOf(startPatternOffset.toString()) }
+    var ruleField by remember { mutableStateOf(rule.toString()) }
+    var gridWidthField by remember { mutableStateOf(gridWidth.toString()) }
+    var gridHeightField by remember { mutableStateOf(gridHeight.toString()) }
+    var wrapAroundSwitch by remember { mutableStateOf(wrapAround) }
+    var startPatternOffsetField by remember { mutableStateOf(startPatternOffset.toString()) }
+    val startPatternEditor = remember { startPattern.toMutableStateList() }
 
+    Dialog(onDismissRequest = onDismissRequest, properties = DialogProperties(dismissOnClickOutside = true)) {
         @Composable
         fun textField(
             value: String,
             label: String,
             onChange: (String) -> Unit,
+            fillWidth: Boolean = true,
             modifier: Modifier = Modifier
         ) {
             TextField(
@@ -52,9 +72,11 @@ fun SettingsDialog(
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
                 ),
-                modifier = modifier
+                modifier = if (fillWidth) modifier
                     .padding(vertical = 4.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                else modifier
+                    .padding(vertical = 4.dp),
                 onValueChange = onChange
             )
         }
@@ -63,7 +85,11 @@ fun SettingsDialog(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Spacers (especially bottom one) are needed for shadows to show up correctly
-            Spacer(Modifier.weight(1f))
+            Spacer(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .clickable { onDismissRequest() })
             Surface(
                 color = MaterialTheme.colors.background,
                 shape = RoundedCornerShape(8.dp),
@@ -71,51 +97,89 @@ fun SettingsDialog(
             ) {
                 Column(Modifier.padding(16.dp)) {
                     Text(
-                        "Settings",
+                        "Parameters",
                         style = Typography.h6,
-                        modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+                        modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
                     )
+                    Text("Rules", Modifier.padding(top = 16.dp, bottom = 8.dp),
+                        style = MaterialTheme.typography.subtitle2)
                     textField(
-                        label = "Wolfram's Rule",
+                        label = "Wolfram's Rule (0..255)",
                         value = ruleField,
                         onChange = { str -> ruleField = str },
                     )
-                    textField(
-                        label = "Grid Width",
-                        value = gridWidthField,
-                        onChange = { str -> gridWidthField = str },
-                    )
-                    textField(
-                        label = "Grid Height",
-                        value = gridHeightField,
-                        onChange = { str -> gridHeightField = str },
-                    )
                     Row(
-                        horizontalArrangement = Arrangement.Start,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Wrap Around")
+                        Switch(checked = wrapAroundSwitch,
+                            onCheckedChange = { ch -> wrapAroundSwitch = ch })
+                    }
+                    Text("Field size", Modifier.padding(top = 16.dp, bottom = 8.dp),
+                        style = MaterialTheme.typography.subtitle2)
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Checkbox(checked = wrapAroundCheckBox,
-                            onCheckedChange = { ch -> wrapAroundCheckBox = ch })
-                        Text("Wrap Around")
+                        textField(
+                            label = "Width",
+                            value = gridWidthField,
+                            onChange = { str -> gridWidthField = str },
+                            fillWidth = false,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text("×", Modifier.padding(horizontal = 8.dp))
+                        textField(
+                            label = "Height (Steps)",
+                            value = gridHeightField,
+                            onChange = { str -> gridHeightField = str },
+                            fillWidth = false,
+                            modifier = Modifier.weight(1f)
+                        )
                     }
+                    Text("Start pattern", Modifier.padding(top = 16.dp, bottom = 8.dp),
+                        style = MaterialTheme.typography.subtitle2)
                     textField(
-                        label = "Start Pattern Offset",
+                        label = "Start Pattern Offset (0 = Left)",
                         value = startPatternOffsetField,
                         onChange = { str -> startPatternOffsetField = str },
                     )
 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        PatternEditor(
+                            startPattern = startPatternEditor,
+                            stateCount = 2,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp)
+                        ) { idx ->
+                            val i = idx.coerceIn(0 until startPatternEditor.size)
+                            startPatternEditor[i] = ((startPatternEditor[i] + 1) % 2).toByte()
+                        }
+                        IconButton(onClick = { startPatternEditor.add(0.toByte()) }) {
+                            Icon(Icons.Sharp.Add, "", Modifier.size(32.dp))
+                        }
+                        IconButton(onClick = { startPatternEditor.removeLast() }) {
+                            Icon(Icons.Sharp.Delete, "", Modifier.size(32.dp))
+                        }
+                    }
+
                     Row(
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.Bottom,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
                     ) {
                         TextButton(onClick = {
                             onApplyClicked(
                                 ruleField.toIntOrNull() ?: rule,
                                 gridWidthField.toIntOrNull() ?: gridWidth,
                                 gridHeightField.toIntOrNull() ?: gridHeight,
-                                wrapAroundCheckBox,
-                                startPattern,
+                                wrapAroundSwitch,
+                                startPatternEditor.toList(),
                                 startPatternOffsetField.toIntOrNull() ?: startPatternOffset
                             )
                         }) {
@@ -124,7 +188,93 @@ fun SettingsDialog(
                     }
                 }
             }
-            Spacer(Modifier.weight(1f))
+            Spacer(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .clickable { onDismissRequest() })
+        }
+    }
+}
+
+@Composable
+fun PatternEditor(
+    startPattern: List<Byte>,
+    stateCount: Int,
+    modifier: Modifier = Modifier,
+    onCellClicked: (Int) -> Unit,
+) {
+    val cellSize = 40.dp
+    val borderThickness = 2.dp
+    val borderColor = MaterialTheme.colors.primary
+
+    var hash = 0
+    startPattern.forEach { hash += hash * stateCount + it }
+
+    val bitmap by remember(hash) {
+        mutableStateOf(Bitmap.createBitmap(startPattern.size, 1, Bitmap.Config.ARGB_8888).also {
+            for (i in startPattern.indices)
+                it[i, 0] = if (startPattern[i] == 0.toByte()) Color.WHITE else Color.BLACK
+        })
+    }
+
+    val scrollState = rememberScrollState()
+
+    Row(
+        modifier
+            .horizontalScroll(scrollState)
+    ) {
+        Canvas(
+            Modifier
+                .size(
+                    cellSize * bitmap.width + borderThickness,
+                    cellSize + borderThickness
+                )
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = { offset ->
+                            if (offset.x >= (borderThickness.toPx() / 2f) &&
+                                offset.x < (size.width - borderThickness.toPx() / 2f)
+                            ) {
+                                onCellClicked(
+                                    floor((offset.x - borderThickness.toPx() / 2f) / cellSize.toPx()).toInt()
+                                )
+                            }
+                        }
+                    )
+                }
+        ) {
+            drawImage(
+                image = bitmap.asImageBitmap(),
+                dstSize = IntSize(cellSize.roundToPx() * bitmap.width, cellSize.roundToPx()),
+                dstOffset = IntOffset(borderThickness.roundToPx() / 2, borderThickness.roundToPx() / 2),
+                filterQuality = FilterQuality.None,
+            )
+            drawLine( // topleft - topright
+                color = borderColor,
+                strokeWidth = borderThickness.toPx(),
+                start = Offset(0f, borderThickness.toPx() / 2),
+                end = Offset(size.width, borderThickness.toPx() / 2),
+            )
+            drawLine( // topright - botright
+                color = borderColor,
+                strokeWidth = borderThickness.toPx(),
+                start = Offset(size.width - borderThickness.toPx() / 2, borderThickness.toPx()),
+                end = Offset(size.width - borderThickness.toPx() / 2, size.height - borderThickness.toPx()),
+            )
+            drawLine( // botright - botleft
+                color = borderColor,
+                strokeWidth = borderThickness.toPx(),
+                start = Offset(size.width, size.height - borderThickness.toPx() / 2),
+                end = Offset(0f, size.height - borderThickness.toPx() / 2),
+            )
+            for (i in startPattern.indices)
+                drawLine( // botleft - topleft for each cell
+                    color = borderColor,
+                    strokeWidth = borderThickness.toPx(),
+                    start = Offset(borderThickness.toPx() / 2 + cellSize.toPx() * i, size.height - borderThickness.toPx() / 2),
+                    end = Offset(borderThickness.toPx() / 2 + cellSize.toPx() * i, borderThickness.toPx() / 2),
+                )
         }
     }
 }
