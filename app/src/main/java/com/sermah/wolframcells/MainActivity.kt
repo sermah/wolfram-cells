@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.sermah.wolframcells.components.CellGrid
 import com.sermah.wolframcells.data.OneDimCellData
 import com.sermah.wolframcells.data.WfRule
@@ -64,20 +65,29 @@ class MainActivity : ComponentActivity() {
                     }
 
                     Column {
-                        Row (
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceAround,
-                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
-                        ){
-                            TextField(value = fieldValue, modifier = Modifier.weight(1f), onValueChange = { str -> fieldValue = str })
-                            Button(modifier = Modifier.padding(start = 16.dp), onClick = {
-                                val newRule = fieldValue.toUIntOrNull()
-                                if (newRule != null && newRule < 256U) {
-                                    currentRule = newRule.toUByte()
-                                    cells = makeCellsForRule.invoke(currentRule)
+                        Surface(
+                            elevation = 8.dp,
+                            color = MaterialTheme.colors.background,
+                            modifier = Modifier.zIndex(1f)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceAround,
+                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
+                            ) {
+                                TextField(
+                                    value = fieldValue,
+                                    modifier = Modifier.weight(1f),
+                                    onValueChange = { str -> fieldValue = str })
+                                Button(modifier = Modifier.padding(start = 16.dp), onClick = {
+                                    val newRule = fieldValue.toUIntOrNull()
+                                    if (newRule != null && newRule < 256U) {
+                                        currentRule = newRule.toUByte()
+                                        cells = makeCellsForRule.invoke(currentRule)
+                                    }
+                                }) {
+                                    Text("Generate")
                                 }
-                            }) {
-                                Text("Generate")
                             }
                         }
                         CellGrid(
