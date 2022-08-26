@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
                     Column {
                         Surface(
                             elevation = 8.dp,
-                            color = MaterialTheme.colors.background,
+                            color = MaterialTheme.colors.surface,
                             modifier = Modifier
                                 .zIndex(1f)
                                 .fillMaxWidth()

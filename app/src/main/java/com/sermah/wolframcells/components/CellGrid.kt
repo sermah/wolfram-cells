@@ -10,12 +10,11 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.round
 import androidx.core.graphics.set
 import com.sermah.wolframcells.data.CellData
-import kotlin.math.ceil
-import kotlin.math.floor
+import kotlin.math.roundToInt
 
 @Composable
 fun CellGrid(
@@ -33,16 +32,13 @@ fun CellGrid(
     }
     
     Canvas(modifier = modifier) {
-        val gridSize = IntSize(ceil(this.size.width / cellSize.toPx()).toInt(), ceil(this.size.height / cellSize.toPx()).toInt())
-
-        val topLeftCellPos = (totalOffset / cellSize.toPx()).run { IntOffset(floor(x).toInt(), floor(y).toInt()) }
-//        val topLeftCellOffset = IntOffset.Zero
-
         drawImage(
             image = bitmap.asImageBitmap(),
-            srcOffset = topLeftCellPos,
-            srcSize = gridSize,
-            dstSize = IntSize(size.width.toInt(), size.height.toInt()),
+            dstOffset = -totalOffset.round(),
+            dstSize = IntSize(
+                (bitmap.width * cellSize.toPx()).roundToInt(),
+                (bitmap.height * cellSize.toPx()).roundToInt()
+            ),
             filterQuality = FilterQuality.None,
         )
     }

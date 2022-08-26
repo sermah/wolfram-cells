@@ -92,7 +92,7 @@ fun SettingsDialog(
                     .fillMaxWidth()
                     .clickable { onDismissRequest() })
             Surface(
-                color = MaterialTheme.colors.background,
+                color = MaterialTheme.colors.surface,
                 shape = RoundedCornerShape(8.dp),
                 elevation = 24.dp,
             ) {
