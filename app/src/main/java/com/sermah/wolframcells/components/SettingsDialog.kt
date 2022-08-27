@@ -30,17 +30,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.set
+import com.sermah.wolframcells.data.WfSimulation
 import com.sermah.wolframcells.ui.theme.Typography
 import kotlin.math.floor
 
 @Composable
 fun SettingsDialog(
-    rule: Int,
-    gridWidth: Int,
-    gridHeight: Int,
-    wrapAround: Boolean,
-    startPattern: List<Byte>,
-    startPatternOffset: Int,
+    simulation: WfSimulation,
     onApplyClicked: (
         rule: Int,
         gridWidth: Int,
@@ -51,14 +47,17 @@ fun SettingsDialog(
     ) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    var ruleField by remember { mutableStateOf(rule.toString()) }
-    var gridWidthField by remember { mutableStateOf(gridWidth.toString()) }
-    var gridHeightField by remember { mutableStateOf(gridHeight.toString()) }
-    var wrapAroundSwitch by remember { mutableStateOf(wrapAround) }
-    var startPatternOffsetField by remember { mutableStateOf(startPatternOffset.toString()) }
-    val startPatternEditor = remember { startPattern.toMutableStateList() }
+    var ruleField by remember { mutableStateOf(simulation.rule.toString()) }
+    var gridWidthField by remember { mutableStateOf(simulation.width.toString()) }
+    var gridHeightField by remember { mutableStateOf(simulation.height.toString()) }
+    var wrapAroundSwitch by remember { mutableStateOf(simulation.wrap) }
+    var startPatternOffsetField by remember { mutableStateOf(simulation.startPatternOffset.toString()) }
+    val startPatternEditor = remember { simulation.startPattern.toMutableStateList() }
 
-    Dialog(onDismissRequest = onDismissRequest, properties = DialogProperties(dismissOnClickOutside = true)) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(dismissOnClickOutside = true)
+    ) {
         @Composable
         fun textField(
             value: String,
@@ -222,12 +221,13 @@ fun SettingsDialog(
                     ) {
                         TextButton(onClick = {
                             onApplyClicked(
-                                ruleField.toIntOrNull() ?: rule,
-                                gridWidthField.toIntOrNull() ?: gridWidth,
-                                gridHeightField.toIntOrNull() ?: gridHeight,
+                                ruleField.toIntOrNull() ?: simulation.rule.toInt(),
+                                gridWidthField.toIntOrNull() ?: simulation.width,
+                                gridHeightField.toIntOrNull() ?: simulation.height,
                                 wrapAroundSwitch,
                                 startPatternEditor.toList(),
-                                startPatternOffsetField.toIntOrNull() ?: startPatternOffset
+                                startPatternOffsetField.toIntOrNull()
+                                    ?: simulation.startPatternOffset
                             )
                         }) {
                             Text("Apply")

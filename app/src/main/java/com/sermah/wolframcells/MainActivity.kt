@@ -8,7 +8,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.sharp.Build
-import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -17,18 +21,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.sermah.wolframcells.components.CellGrid
 import com.sermah.wolframcells.components.SettingsDialog
-import com.sermah.wolframcells.data.OneDimCellData
-import com.sermah.wolframcells.data.WfRule
+import com.sermah.wolframcells.data.WfSimulation
 import com.sermah.wolframcells.ui.theme.WolframCellsTheme
+import com.sermah.wolframcells.util.OffsetSaver
 
 class MainActivity : ComponentActivity() {
 
-    var currentRule by mutableStateOf(30.toUByte())
-    var gridWidth by mutableStateOf(100)
-    var gridHeight by mutableStateOf(100)
-    var wrapSides by mutableStateOf(true)
-    var startPattern = mutableStateListOf(1.toByte())
-    var startPatternOffset by mutableStateOf((gridWidth - startPattern.size) / 2)
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,30 +38,24 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    val makeCells = { ->
-                        OneDimCellData(
-                            width = gridWidth,
-                            height = gridHeight,
-                            statesCount = 2,
-                            wrapSides = wrapSides,
-                            evolveRule = WfRule(currentRule)::execute
-                        ).also {
-                            val offsetCoerced =
-                                startPatternOffset.coerceIn(0..gridWidth - startPattern.size)
-                            for (i in 0 until startPattern.size.coerceAtMost(gridWidth - offsetCoerced))
-                                it[offsetCoerced + i, 0] = startPattern[i]
-                            it.completeSimulation()
-                        }
+                    val simulation = rememberSaveable(
+                        saver = WfSimulation.saver,
+                    ) {
+                        WfSimulation()
                     }
 
                     var cells by remember {
                         mutableStateOf(
-                            makeCells.invoke()
+                            simulation.generate()
                         )
                     }
 
-                    var totalOffset by remember { mutableStateOf(Offset(0f, 0f)) }
-                    var cellSize by remember { mutableStateOf(4f) }
+                    var totalOffset by rememberSaveable(stateSaver = OffsetSaver) {
+                        mutableStateOf(
+                            Offset(0f, 0f)
+                        )
+                    }
+                    var cellSize by rememberSaveable { mutableStateOf(4f) }
 
                     var showSettingsDialog by remember { mutableStateOf(false) }
 
@@ -86,9 +79,14 @@ class MainActivity : ComponentActivity() {
                                         .weight(1f)
                                         .padding(start = 8.dp),
                                 ) {
-                                    Text("Wolfram's Rule $currentRule", style = MaterialTheme.typography.h6)
-                                    Text("$gridWidth × $gridHeight (${if (wrapSides) "Wrap" else "No wrap"})",
-                                        style = MaterialTheme.typography.caption)
+                                    Text(
+                                        "Wolfram's Rule ${simulation.rule}",
+                                        style = MaterialTheme.typography.h6
+                                    )
+                                    Text(
+                                        "${simulation.width} × ${simulation.height} (${if (simulation.wrap) "Wrap" else "No wrap"})",
+                                        style = MaterialTheme.typography.caption
+                                    )
                                 }
                                 IconButton(onClick = {
                                     showSettingsDialog = true
@@ -115,25 +113,20 @@ class MainActivity : ComponentActivity() {
                     }
 
                     if (showSettingsDialog) SettingsDialog(
-                        rule = currentRule.toInt(),
-                        gridWidth = cells.width,
-                        gridHeight = cells.height,
-                        wrapAround = cells.wrapSides,
-                        startPattern = startPattern,
-                        startPatternOffset = startPatternOffset,
-                        onApplyClicked = {
-                                rule: Int, newGridWidth: Int, newGridHeight: Int, wrapAround: Boolean,
-                                newStartPattern: List<Byte>, newStartPatternOffset: Int ->
+                        simulation = simulation,
+                        onApplyClicked = { rule: Int, width: Int, height: Int, wrap: Boolean,
+                                           startPattern: List<Byte>, startPatternOffset: Int ->
 
-                            currentRule = rule.coerceIn(0..255).toUByte()
-                            gridWidth = newGridWidth.coerceIn(1..1028)
-                            gridHeight = newGridHeight.coerceIn(1..1028)
-                            wrapSides = wrapAround
-                            startPattern = newStartPattern.toMutableStateList()
-                            startPatternOffset =
-                                newStartPatternOffset.coerceIn(0..gridWidth - startPattern.size)
+                            simulation.update(
+                                rule = rule,
+                                width = width,
+                                height = height,
+                                wrap = wrap,
+                                startPattern = startPattern,
+                                startPatternOffset = startPatternOffset,
+                            )
 
-                            cells = makeCells()
+                            cells = simulation.generate()
                             showSettingsDialog = false
                         },
                         onDismissRequest = {
