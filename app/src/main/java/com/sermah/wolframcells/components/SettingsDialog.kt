@@ -14,15 +14,16 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.sharp.Add
 import androidx.compose.material.icons.sharp.Delete
+import androidx.compose.material.icons.sharp.VerticalAlignCenter
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -140,28 +141,25 @@ fun SettingsDialog(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    Text("Start pattern", Modifier.padding(top = 16.dp, bottom = 8.dp),
-                        style = MaterialTheme.typography.subtitle2)
-                    textField(
-                        label = "Start Pattern Offset (0 = Left)",
-                        value = startPatternOffsetField,
-                        onChange = { str -> startPatternOffsetField = str },
-                    )
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            "Size = ${startPatternEditor.size}",
+                            "Start pattern",
+                            style = MaterialTheme.typography.subtitle2,
+                            modifier = Modifier
+                                .padding(top = 16.dp, bottom = 8.dp, end = 8.dp)
+                        )
+                        Text(
+                            "(size = ${startPatternEditor.size})",
                             style = MaterialTheme.typography.caption,
                             modifier = Modifier
-                                .padding(top = 4.dp, bottom = 4.dp, end = 8.dp),
-                            textAlign = TextAlign.Start
-                        )
-                        Divider(Modifier.weight(1f),
-                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f),
-                            thickness = 1.dp,
+                                .padding(top = 16.dp, bottom = 8.dp)
                         )
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    ) {
                         PatternEditor(
                             startPattern = startPatternEditor,
                             stateCount = 2,
@@ -172,14 +170,46 @@ fun SettingsDialog(
                             val i = idx.coerceIn(0 until startPatternEditor.size)
                             startPatternEditor[i] = ((startPatternEditor[i] + 1) % 2).toByte()
                         }
-                        IconButton(onClick = { startPatternEditor.add(0.toByte()) }, Modifier.size(40.dp)) {
+                        IconButton(
+                            onClick = { startPatternEditor.add(0.toByte()) },
+                            Modifier.size(40.dp)
+                        ) {
                             Icon(Icons.Sharp.Add, "", Modifier.size(24.dp))
                         }
                         IconButton(
                             enabled = startPatternEditor.size > 1,
                             onClick = { if (startPatternEditor.size > 1) startPatternEditor.removeLast() },
-                            modifier = Modifier.size(40.dp)) {
+                            modifier = Modifier.size(40.dp)
+                        ) {
                             Icon(Icons.Sharp.Delete, "", Modifier.size(24.dp))
+                        }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        textField(
+                            label = "Start Pattern Offset (0 = Left)",
+                            value = startPatternOffsetField,
+                            fillWidth = false,
+                            onChange = { str -> startPatternOffsetField = str },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp)
+                        )
+                        IconButton(
+                            onClick = {
+                                startPatternOffsetField = (((gridWidthField.toIntOrNull()
+                                    ?: 1) - startPatternEditor.size) / 2)
+                                    .coerceAtLeast(0)
+                                    .toString()
+                            },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                Icons.Sharp.VerticalAlignCenter,
+                                "",
+                                Modifier
+                                    .size(24.dp)
+                                    .rotate(90f)
+                            )
                         }
                     }
 

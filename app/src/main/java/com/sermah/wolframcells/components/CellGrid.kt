@@ -2,7 +2,10 @@ package com.sermah.wolframcells.components
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -23,13 +26,7 @@ fun CellGrid(
     cellSize: Dp,
     modifier: Modifier
 ) {
-    var dataHash by remember { mutableStateOf(data.hashCode()) }
-    var bitmap by remember { mutableStateOf(cellBitmap(data)) }
-
-    if (dataHash != data.hashCode()) {
-        bitmap = cellBitmap(data)
-        dataHash = data.hashCode()
-    }
+    val bitmap by remember(data.hashCode()) { mutableStateOf(cellBitmap(data)) }
     
     Canvas(modifier = modifier) {
         drawImage(

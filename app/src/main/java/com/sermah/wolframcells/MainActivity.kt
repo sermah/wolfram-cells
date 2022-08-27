@@ -27,8 +27,8 @@ class MainActivity : ComponentActivity() {
     var gridWidth by mutableStateOf(100)
     var gridHeight by mutableStateOf(100)
     var wrapSides by mutableStateOf(true)
-    var startPatternOffset by mutableStateOf(gridWidth / 2)
     var startPattern = mutableStateListOf(1.toByte())
+    var startPatternOffset by mutableStateOf((gridWidth - startPattern.size) / 2)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,8 +47,9 @@ class MainActivity : ComponentActivity() {
                             wrapSides = wrapSides,
                             evolveRule = WfRule(currentRule)::execute
                         ).also {
-                            val offsetCoerced = startPatternOffset.coerceIn(0 until gridWidth - startPattern.size)
-                            for (i in 0 until startPattern.size.coerceAtMost(gridWidth - startPattern.size))
+                            val offsetCoerced =
+                                startPatternOffset.coerceIn(0..gridWidth - startPattern.size)
+                            for (i in 0 until startPattern.size.coerceAtMost(gridWidth - offsetCoerced))
                                 it[offsetCoerced + i, 0] = startPattern[i]
                             it.completeSimulation()
                         }
@@ -106,7 +107,7 @@ class MainActivity : ComponentActivity() {
                                     detectTransformGestures { centroid, pan, zoom, _ ->
                                         totalOffset -= pan
                                         totalOffset = (totalOffset + centroid) / cellSize
-                                        cellSize *= zoom
+                                        cellSize = (cellSize * zoom).coerceIn(2f..64f)
                                         totalOffset = totalOffset * cellSize - centroid
                                     }
                                 }
@@ -129,7 +130,8 @@ class MainActivity : ComponentActivity() {
                             gridHeight = newGridHeight.coerceIn(1..1028)
                             wrapSides = wrapAround
                             startPattern = newStartPattern.toMutableStateList()
-                            startPatternOffset = newStartPatternOffset.coerceIn(0 until gridWidth)
+                            startPatternOffset =
+                                newStartPatternOffset.coerceIn(0..gridWidth - startPattern.size)
 
                             cells = makeCells()
                             showSettingsDialog = false
