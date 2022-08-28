@@ -35,13 +35,13 @@ import com.sermah.wolframcells.ui.theme.Typography
 import kotlin.math.floor
 
 @Composable
-fun SettingsDialog(
+fun WfPreferencesDialog(
     simulation: WfSimulation,
     onApplyClicked: (
         rule: Int,
-        gridWidth: Int,
-        gridHeight: Int,
-        wrapAround: Boolean,
+        width: Int,
+        height: Int,
+        wrap: Boolean,
         startPattern: List<Byte>,
         startPatternOffset: Int
     ) -> Unit,

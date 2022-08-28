@@ -20,8 +20,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.sermah.wolframcells.components.CellGrid
-import com.sermah.wolframcells.components.SettingsDialog
 import com.sermah.wolframcells.data.WfSimulation
+import com.sermah.wolframcells.data.WfSimulationSaver
+import com.sermah.wolframcells.data.simulation.Simulation
 import com.sermah.wolframcells.ui.theme.WolframCellsTheme
 import com.sermah.wolframcells.util.OffsetSaver
 
@@ -38,8 +39,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    val simulation = rememberSaveable(
-                        saver = WfSimulation.saver,
+                    val simulation: Simulation = rememberSaveable(
+                        saver = WfSimulationSaver,
                     ) {
                         WfSimulation()
                     }
@@ -80,11 +81,11 @@ class MainActivity : ComponentActivity() {
                                         .padding(start = 8.dp),
                                 ) {
                                     Text(
-                                        "Wolfram's Rule ${simulation.rule}",
+                                        simulation.title,
                                         style = MaterialTheme.typography.h6
                                     )
                                     Text(
-                                        "${simulation.width} × ${simulation.height} (${if (simulation.wrap) "Wrap" else "No wrap"})",
+                                        simulation.subtitle,
                                         style = MaterialTheme.typography.caption
                                     )
                                 }
@@ -112,24 +113,12 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    if (showSettingsDialog) SettingsDialog(
-                        simulation = simulation,
-                        onApplyClicked = { rule: Int, width: Int, height: Int, wrap: Boolean,
-                                           startPattern: List<Byte>, startPatternOffset: Int ->
-
-                            simulation.update(
-                                rule = rule,
-                                width = width,
-                                height = height,
-                                wrap = wrap,
-                                startPattern = startPattern,
-                                startPatternOffset = startPatternOffset,
-                            )
-
+                    if (showSettingsDialog) simulation.PreferencesDialog(
+                        onApply = {
                             cells = simulation.generate()
                             showSettingsDialog = false
                         },
-                        onDismissRequest = {
+                        onDismiss = {
                             showSettingsDialog = false
                         }
                     )
