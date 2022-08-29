@@ -73,8 +73,8 @@ class WfSimulation(
         startPatternOffset: Int = this.startPatternOffset,
     ) {
         this.rule = rule.coerceIn(0..255).toUByte()
-        this.width = width.coerceIn(1..1028)
-        this.height = height.coerceIn(1..1028)
+        this.width = width.coerceIn(1..1024)
+        this.height = height.coerceIn(1..1024)
         this.wrap = wrap
         this.startPattern = startPattern.toMutableStateList()
         this.startPatternOffset =
