@@ -1,9 +1,11 @@
-package com.sermah.wolframcells.data
+package com.sermah.wolframcells.data.simulation
 
+import android.graphics.Color
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.listSaver
 import com.sermah.wolframcells.components.WfPreferencesDialog
-import com.sermah.wolframcells.data.simulation.Simulation
+import com.sermah.wolframcells.data.OneDimCellData
+import com.sermah.wolframcells.data.WfRule
 
 class WfSimulation(
     startRule: Int = 30,
@@ -28,6 +30,7 @@ class WfSimulation(
         width = width,
         height = height,
         statesCount = 2,
+        stateColors = arrayOf(Color.WHITE, Color.BLACK),
         wrapSides = wrap,
         evolveRule = WfRule(rule)::execute
     ).also {

@@ -16,6 +16,8 @@ import androidx.compose.material.icons.sharp.Add
 import androidx.compose.material.icons.sharp.Delete
 import androidx.compose.material.icons.sharp.VerticalAlignCenter
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -30,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.set
-import com.sermah.wolframcells.data.WfSimulation
+import com.sermah.wolframcells.data.simulation.WfSimulation
 import com.sermah.wolframcells.ui.theme.Typography
 import kotlin.math.floor
 
@@ -47,12 +49,19 @@ fun WfPreferencesDialog(
     ) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    var ruleField by remember { mutableStateOf(simulation.rule.toString()) }
-    var gridWidthField by remember { mutableStateOf(simulation.width.toString()) }
-    var gridHeightField by remember { mutableStateOf(simulation.height.toString()) }
-    var wrapAroundSwitch by remember { mutableStateOf(simulation.wrap) }
-    var startPatternOffsetField by remember { mutableStateOf(simulation.startPatternOffset.toString()) }
-    val startPatternEditor = remember { simulation.startPattern.toMutableStateList() }
+    var ruleField by rememberSaveable { mutableStateOf(simulation.rule.toString()) }
+    var gridWidthField by rememberSaveable { mutableStateOf(simulation.width.toString()) }
+    var gridHeightField by rememberSaveable { mutableStateOf(simulation.height.toString()) }
+    var wrapAroundSwitch by rememberSaveable { mutableStateOf(simulation.wrap) }
+    var startPatternOffsetField by rememberSaveable { mutableStateOf(simulation.startPatternOffset.toString()) }
+    val startPatternEditor = rememberSaveable(
+        saver = run {
+            listSaver(
+                save = { it.toList() },
+                restore = { it.toMutableStateList() }
+            )
+        }
+    ) { simulation.startPattern.toMutableStateList() }
 
     Dialog(
         onDismissRequest = onDismissRequest,

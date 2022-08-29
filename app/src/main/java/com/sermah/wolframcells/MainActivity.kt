@@ -20,45 +20,39 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.sermah.wolframcells.components.CellGrid
-import com.sermah.wolframcells.data.WfSimulation
-import com.sermah.wolframcells.data.WfSimulationSaver
+import com.sermah.wolframcells.data.CellData
 import com.sermah.wolframcells.data.simulation.Simulation
+import com.sermah.wolframcells.data.simulation.WfSimulation
+import com.sermah.wolframcells.data.simulation.WfSimulationSaver
 import com.sermah.wolframcells.ui.theme.WolframCellsTheme
 import com.sermah.wolframcells.util.OffsetSaver
 
+val cellSizeRange = 1f..64f
+
 class MainActivity : ComponentActivity() {
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             WolframCellsTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    val simulation: Simulation = rememberSaveable(
-                        saver = WfSimulationSaver,
-                    ) {
+                    val simulation: Simulation = rememberSaveable(saver = WfSimulationSaver) {
                         WfSimulation()
                     }
 
-                    var cells by remember {
-                        mutableStateOf(
-                            simulation.generate()
-                        )
+                    var cellData: CellData by remember {
+                        mutableStateOf(simulation.generate())
                     }
 
                     var totalOffset by rememberSaveable(stateSaver = OffsetSaver) {
-                        mutableStateOf(
-                            Offset(0f, 0f)
-                        )
+                        mutableStateOf(Offset(0f, 0f))
                     }
-                    var cellSize by rememberSaveable { mutableStateOf(4f) }
 
-                    var showSettingsDialog by remember { mutableStateOf(false) }
+                    var cellSize by rememberSaveable { mutableStateOf(4f) }
+                    var showSettingsDialog by rememberSaveable { mutableStateOf(false) }
 
                     Column {
                         Surface(
@@ -97,7 +91,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         CellGrid(
-                            data = cells,
+                            data = cellData,
                             totalOffset = totalOffset,
                             cellSize = cellSize.dp,
                             modifier = Modifier
@@ -106,7 +100,7 @@ class MainActivity : ComponentActivity() {
                                     detectTransformGestures { centroid, pan, zoom, _ ->
                                         totalOffset -= pan
                                         totalOffset = (totalOffset + centroid) / cellSize
-                                        cellSize = (cellSize * zoom).coerceIn(2f..64f)
+                                        cellSize = (cellSize * zoom).coerceIn(cellSizeRange)
                                         totalOffset = totalOffset * cellSize - centroid
                                     }
                                 }
@@ -115,7 +109,7 @@ class MainActivity : ComponentActivity() {
 
                     if (showSettingsDialog) simulation.PreferencesDialog(
                         onApply = {
-                            cells = simulation.generate()
+                            cellData = simulation.generate()
                             showSettingsDialog = false
                         },
                         onDismiss = {

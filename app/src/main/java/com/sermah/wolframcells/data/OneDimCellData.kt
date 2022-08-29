@@ -4,6 +4,7 @@ data class OneDimCellData (
     override val width: Int,
     override val height: Int,
     override val statesCount: Int,
+    override val stateColors: Array<Int>,
     val wrapSides: Boolean = true,
     val noWrapWallState: Byte = 0,
     val evolveRule: (Byte, Byte, Byte) -> Byte,
@@ -69,6 +70,7 @@ data class OneDimCellData (
         result = 31 * result + noWrapWallState
         result = 31 * result + evolveRule.hashCode()
         result = 31 * result + data.contentDeepHashCode()
+        result = 31 * result + stateColors.contentDeepHashCode()
         result = 31 * result + lastGen
         return result
     }
