@@ -17,3 +17,18 @@ The app is written in Kotlin and uses Jetpack Compose as its framework.
 - Saving snapshots of the field as images
 - Ability to draw on the field
 - Adding more cellular automata types
+
+## Screenshots:
+
+<span>
+<img src="readme_assets/cells_1.png" width=200>
+<img src="readme_assets/cells_2.png" width=200>
+<img src="readme_assets/cells_3.png" width=200>
+</span>
+
+Here's an example of changing the starting pattern:
+
+<span>
+<img src="readme_assets/cells_4.png" width=220>
+<img src="readme_assets/cells_5.png" width=220>
+</span>
